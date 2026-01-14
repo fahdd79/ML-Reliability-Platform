@@ -1,0 +1,14 @@
+alerts:
+  drift_threshold: 0.3
+  consecutive_windows: 2
+
+retraining:
+  min_new_samples: 500
+  cooldown_windows: 2
+
+promotion:
+  primary_metric_min_improvement: 0.01
+  guardrail_max_regression: 0.02
+
+rollback:
+  performance_floor: 0.85

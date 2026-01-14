@@ -1,0 +1,9 @@
+project:
+  name: ml-reliability-platform
+  version: 0.1.0
+
+time:
+  label_delay_windows: 2
+
+environment:
+  random_seed: 42
