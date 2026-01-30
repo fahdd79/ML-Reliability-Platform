@@ -1,9 +1,15 @@
-project:
-  name: ml-reliability-platform
-  version: 0.1.0
+environment:
+  random_seed: 42
 
 time:
   label_delay_windows: 2
 
-environment:
-  random_seed: 42
+data:
+  n_days: 60
+  events_per_day: 800
+  window_days: 7
+
+  drift:
+    start_day: 28
+    covariate_strength: 1.0
+    concept_strength: 1.0
