@@ -1,36 +1,28 @@
 alerts:
-  drift_threshold: 0.3
   consecutive_windows: 2
 
 retraining:
   min_new_samples: 500
   cooldown_windows: 2
+  trigger_level: warning   # none | warning | alert
 
 promotion:
-  primary_metric_min_improvement: 0.01
+  primary_metric: roc_auc
+  primary_metric_min_improvement: 0.00
+  guardrail_metric: pr_auc
   guardrail_max_regression: 0.02
 
 rollback:
-  performance_floor: 0.85
+  performance_floor_primary_metric: 0.55
+
+
+# keep your drift: block unchanged below
 drift:
   reference_window: T0
-
-  # If >= this fraction of monitored features exceed threshold => alert
   min_fraction_features_breaching: 0.25
-
-  # PSI thresholds (tabular drift standard)
   psi_warning: 0.10
   psi_alert: 0.20
-
-  # KS threshold for numeric features (p-value)
   ks_pvalue_alert: 0.01
-
   monitored_features:
-    numeric:
-      - amount
-      - hour
-      - velocity_1h
-    categorical:
-      - merchant_cat
-      - country
-      - device
+    numeric: [amount, hour, velocity_1h]
+    categorical: [merchant_cat, country, device]

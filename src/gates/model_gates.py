@@ -6,29 +6,39 @@ from typing import Dict
 
 @dataclass(frozen=True)
 class PromotionPolicy:
-    min_roc_auc_gain: float
-    min_pr_auc_gain: float
-    max_brier_increase: float  # candidate cannot be worse by more than this
+    primary_metric: str
+    primary_min_improvement: float
+    guardrail_metric: str
+    guardrail_max_regression: float  # candidate cannot be worse by more than this (higher is worse for guardrail)
 
 
 def decide_promotion(prod: Dict[str, float], cand: Dict[str, float], policy: PromotionPolicy) -> Dict[str, object]:
-    """
-    Returns:
-      - decision: PROMOTE or REJECT
-      - reasons: list[str]
-    """
     reasons = []
 
-    roc_gain = cand["roc_auc"] - prod["roc_auc"]
-    pr_gain = cand["pr_auc"] - prod["pr_auc"]
-    brier_delta = cand["brier"] - prod["brier"]
+    p = policy.primary_metric
+    g = policy.guardrail_metric
 
-    if roc_gain < policy.min_roc_auc_gain:
-        reasons.append(f"roc_auc_gain {roc_gain:.4f} < {policy.min_roc_auc_gain:.4f}")
-    if pr_gain < policy.min_pr_auc_gain:
-        reasons.append(f"pr_auc_gain {pr_gain:.4f} < {policy.min_pr_auc_gain:.4f}")
-    if brier_delta > policy.max_brier_increase:
-        reasons.append(f"brier_increase {brier_delta:.4f} > {policy.max_brier_increase:.4f}")
+    if p not in prod or p not in cand:
+        return {"decision": "REJECT", "reasons": [f"missing primary metric {p}"]}
+
+    if g not in prod or g not in cand:
+        return {"decision": "REJECT", "reasons": [f"missing guardrail metric {g}"]}
+
+    primary_gain = cand[p] - prod[p]
+    if primary_gain < policy.primary_min_improvement:
+        reasons.append(f"{p}_gain {primary_gain:.4f} < {policy.primary_min_improvement:.4f}")
+
+    # Guardrail: allow some regression.
+    # For "brier" lower is better -> regression means cand[g] - prod[g] > max_regression
+    # For metrics where higher is better (like pr_auc), regression means prod[g] - cand[g] > max_regression
+    if g == "brier":
+        guardrail_delta = cand[g] - prod[g]
+        if guardrail_delta > policy.guardrail_max_regression:
+            reasons.append(f"{g}_increase {guardrail_delta:.4f} > {policy.guardrail_max_regression:.4f}")
+    else:
+        guardrail_regress = prod[g] - cand[g]
+        if guardrail_regress > policy.guardrail_max_regression:
+            reasons.append(f"{g}_drop {guardrail_regress:.4f} > {policy.guardrail_max_regression:.4f}")
 
     if reasons:
         return {"decision": "REJECT", "reasons": reasons}
