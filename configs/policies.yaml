@@ -12,3 +12,25 @@ promotion:
 
 rollback:
   performance_floor: 0.85
+drift:
+  reference_window: T0
+
+  # If >= this fraction of monitored features exceed threshold => alert
+  min_fraction_features_breaching: 0.25
+
+  # PSI thresholds (tabular drift standard)
+  psi_warning: 0.10
+  psi_alert: 0.20
+
+  # KS threshold for numeric features (p-value)
+  ks_pvalue_alert: 0.01
+
+  monitored_features:
+    numeric:
+      - amount
+      - hour
+      - velocity_1h
+    categorical:
+      - merchant_cat
+      - country
+      - device
